@@ -2,6 +2,8 @@ import requests
 import time
 from datetime import datetime
 from pymongo import MongoClient, UpdateOne, ASCENDING
+
+
 def date_to_milliseconds(date_str):
     dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
     return int(dt.timestamp() * 1000)
@@ -25,7 +27,7 @@ def get_klines(symbol, interval, start_time=None, end_time=None, limit=500):
 def get_all_klines(symbol, interval, start_time):
     
     while True:
-        klines = get_klines(symbol, interval, start_time)
+        klines = get_klines(symbol, interval, start_time,collection)
         if not klines:
             break
         operations = []
