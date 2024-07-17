@@ -28,13 +28,13 @@ def connect_to_mongo_db(uri, database_name):
 
 def get_data_from_mongo_with_time_range(collection:Collection, start_time: Optional[str] = None, end_time: Optional[str] = None, projection=None):
     """
-    从 MongoDB 集合中抓取特定时间范围的数据。
+ 從 MongoDB 集合中抓取特定時間範圍的資料。
 
     :param collection: MongoDB 集合
-    :param start_time: 开始时间（字符串格式）
-    :param end_time: 结束时间（字符串格式）
+    :param start_time: 開始時間（字符串格式）
+    :param end_time: 結束時間（字符串格式）
     :param projection: 要包含或排除的字段
-    :return: 包含查询数据的 pandas DataFrame
+    :return: 包含查詢資料的 pandas DataFrame
     """
     query = {}
     if start_time and end_time:
