@@ -15,6 +15,17 @@ class rs_calculate(BinanceKlinesCollector):
         """
         super().__init__(db_uri, db_name, collection_name)
         self.Rs_collection=self.db["RS"]
+        self.usdt_pairs=super().get_binance_contract_pairs()
+    def get_recently_Kline(self,interval,limit=5):
+
+        all_klines = {}
+        for pair in self.usdt_pairs:
+            klines = self.get_klines(pair, interval, limit=limit)
+            all_klines[pair] = klines
+        print(all_klines)
+        return all_klines
+
+    
 
 
 if __name__ == "__main__":
@@ -25,4 +36,6 @@ if __name__ == "__main__":
 
     # Example usage
     collector = rs_calculate(DB_URI, DB_NAME, COLLECTION_NAME)
-    print(collector.collection.find_one())
+    collector.get_recently_Kline("1d")
+    # print(collector.collection.find_one())
+
