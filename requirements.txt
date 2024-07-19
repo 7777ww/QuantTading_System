@@ -1,4 +1,4 @@
 requests
 flask
 flask-smorest
-pymongo
+pymongo==4.8.0

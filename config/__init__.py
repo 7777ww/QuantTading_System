@@ -1,0 +1,1 @@
+from config.setting import uri
