@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>獲取K線數據</title>
+</head>
+<body>
+    <form action="/kline/get_kline" method="get">
+        <label for="symbol">交易對:</label>
+        <input type="text" id="symbol" name="symbol" required><br><br>
+        
+        <label for="interval">時間間隔:</label>
+        <input type="text" id="interval" name="interval" required><br><br>
+        
+        <label for="start_time">開始時間:</label>
+        <input type="text" id="start_time" name="start_time"><br><br>
+        
+        <label for="end_time">結束時間:</label>
+        <input type="text" id="end_time" name="end_time"><br><br>
+        
+        <input type="submit" value="獲取K線數據">
+    </form>
+
+    <div id="result"></div>
+</body>
+</html>
