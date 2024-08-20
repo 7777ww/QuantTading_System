@@ -1,27 +1,38 @@
-# MyNewRepo
-# 資料夾說明
+# binance交易所交易對篩選系統
 
-## binance_api
-這個資料夾裡面放的是跟幣安API溝通的程式碼啦！
+這個專案是一個基於Flask的微服務，用於篩選和分析幣安交易所的交易對。它主要功能包括:
 
-## mongodb
-這邊是跟MongoDB資料庫有關的程式碼，處理資料存取的東西都在這裡喔！
+1. 獲取幣安交易所的交易對數據
+2. 計算交易對的RS ranking
+3. 根據成交量和移動平均線進行篩選
+4. 將篩選結果保存到數據庫
+5. 通過Web界面展示篩選結果
 
-## model
-這個資料夾應該是放資料模型或是架構定義的地方啦！
+系統使用Flask框架構建，提供RESTful API接口。它允許客戶端通過HTTP請求與服務器進行交互，實現數據的獲取、處理和展示。這種架構使得系統具有良好的可擴展性和靈活性，能夠方便地集成到其他應用中或者被其他服務調用。
 
-## route
-Flask的路由相關程式碼都塞在這裡面，處理網頁請求用的啦！
+## route資料夾
+這個資料夾包含了所有使用@route裝飾器的Flask路由。目前已實現功能：
 
-## templates
-HTML模板檔案應該都放在這邊，前端的東西啦！
+1. filter.py：包含了/get_daily_screening路由，用於獲取每日篩選結果。
 
-## Dockerfile
-這個檔案是用來打包Docker映像檔的設定檔啦，超方便的！
+
+## templates資料夾
+存放HTML模板文件，主要文件有：
+
+1. filter.html：顯示每日篩選結果的頁面模板。
+2. get_kline.html：用於獲取K線數據的表單頁面。
+3. kline_data.html：顯示OHLCV數據的頁面模板。
+
+## binance_api資料夾
+包含與幣安API交互的代碼，如filter.py中的SymbolFilter類。
+
+## model資料夾
+定義了數據模型，如DailyScreening模型。
 
 ## main.py
-這個就是整個程式的進入點啦，最重要的檔案之一喔！
+這是整個Flask應用的入口點，負責初始化和啟動服務。
 
 ## requirements.txt
-這裡列出了這個專案需要的Python套件，缺一不可呢！
+列出了項目所需的所有Python依賴包。
+
 
