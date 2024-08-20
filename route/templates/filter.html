@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>每日篩選結果</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>每日篩選結果</h1>
+    {% if result %}
+    <table>
+        <thead>
+            <tr>
+                <th>交易對</th>
+                <th>RS值</th>
+                <th>成交量</th>
+                <th>移動平均成交量</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in result %}
+            <tr>
+                <td>{{ item.symbol }}</td>
+                <td>{{ item.rs_value }}</td>
+                <td>{{ item.volume }}</td>
+                <td>{{ item.moving_avg_volume }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>今天還沒有篩選結果</p>
+    {% endif %}
+</body>
+</html>
