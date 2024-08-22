@@ -2,7 +2,10 @@
 import os
 import json
 from mongoengine import register_connection
-from mongodb.model import *  # Import all models
+from model import OHLCV
+from .get_data import get_ohlcv_data_as_df
+
+
 
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
@@ -31,4 +34,6 @@ def init_db():
 
 # Initialize the database when the package is imported
 init_db()
+
+
 
