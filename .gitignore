@@ -3,3 +3,7 @@ crawler.ipynb
 Untitled-1.ipynb
 config.py
 setting.py
+config.json
+database.json
+.vscode/
+.idea/

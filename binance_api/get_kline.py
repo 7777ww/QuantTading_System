@@ -3,14 +3,16 @@ import time
 from datetime import datetime
 from pymongo import MongoClient, UpdateOne
 from config import uri
+import pandas as pd
 
 class BinanceKlinesCollector:
     def __init__(self):
         from mongodb import init_db
-        from model import OHLCV
+        from model import OHLCV as OHLCVModel
         init_db()
-        self.OHLCV = OHLCV
+        self.OHLCV = OHLCVModel 
         self.session = requests.Session()
+        self.klines_data = {}
 
     def date_to_milliseconds(self, date_str):
         dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
@@ -45,7 +47,7 @@ class BinanceKlinesCollector:
         返回:
         dict: 以交易對為鍵，K線數據為值的字典
         """
-        klines_data = {}
+        self.klines_data = {}
 
         for symbol in symbols:
             print(f"正在獲取 {symbol} 的最近 {n_klines} 條 {interval} K線數據...")
@@ -57,7 +59,7 @@ class BinanceKlinesCollector:
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
                 # 將收盤價轉換為浮點數
                 df['close'] = df['close'].astype(float)
-                klines_data[symbol] = df
+                self.klines_data[symbol] = df
             else:
                 print(f"無法獲取 {symbol} 的K線數據")
 
@@ -150,10 +152,7 @@ class BinanceKlinesCollector:
 
 if __name__ == "__main__":
     # Configuration
-    DB_URI = uri
-    DB_NAME = "Quant"
-    COLLECTION_NAME = 'OHLCV'
 
-    # Example usage
-    collector = BinanceKlinesCollector(DB_URI, DB_NAME, COLLECTION_NAME)
-    collector.get_all_klines('BTCUSDT', '4h')
+    collector = BinanceKlinesCollector()
+    # collector.get_all_klines('BTCUSDT', '4h')
+    collector.get_recent_klines(['BTCUSDT'], n_klines=10, interval='4h')

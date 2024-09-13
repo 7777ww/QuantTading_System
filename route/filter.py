@@ -4,15 +4,21 @@ from datetime import datetime
 
 filter_blueprint = Blueprint('filter', __name__)
 
-@filter_blueprint.route('/get_daily_screening', methods=['GET'])
-def get_daily_screening():
+
+
+@filter_blueprint.route('/get_daily_screening/<strategy_name>', methods=['GET'])
+def get_daily_screening(strategy_name):
     try:
         # 獲取今天的日期
         today = datetime.now().date()
         
         # 從數據庫中檢索今天的篩選結果
-        daily_screening = DailyScreening.objects(date=today).first()
-        
+        daily_screening = DailyScreening.objects(date=today, strategy_name=strategy_name).first()
+        # 如果找不到指定的策略名稱，返回錯誤信息
+        if not strategy_name:
+            return jsonify({"error": "未提供策略名稱"}), 400
+
+ 
         if daily_screening:
             # 如果找到了今天的篩選結果，將其轉換為字典格式
             result = {
@@ -32,11 +38,16 @@ def get_daily_screening():
                     "moving_avg_volume": daily_screening.moving_avg_volumes[i]
                 })
             return render_template('filter.html', result=result_list), 200
+        elif not daily_screening:
+            
+            return jsonify({"error": f"can't find strategy: {strategy_name}"}), 404
         else:
             # 如果沒有找到今天的篩選結果
             # 如果沒有找到今天的篩選結果，調用 filter_symbols 方法
             from binance_api.filter import SymbolFilter
-            
+            # 創建等待頁面
+            task_id = str(uuid.uuid4())  # 生成唯一的任務ID
+            return render_template('watting.html', task_id=task_id), 202
             filter = SymbolFilter(interval='1d', moving_periods=1)
             filtered_results = filter.filter_symbols(top_n=20, moving_avg_period=5)
             
