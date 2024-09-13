@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, Response
 
-from binance_api.rs import create_rs_dataframe, get_top_rs_pairs, save_rs_to_db
+from binance_api.rs import create_rs_dataframe, save_rs_to_db
 import json
 import time
 

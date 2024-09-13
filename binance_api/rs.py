@@ -2,6 +2,9 @@ from binance_api.get_binanace_contract_pairs import binance_contract_pairs
 from binance_api.get_kline import BinanceKlinesCollector
 import pandas as pd
 from config import uri
+from model.rs import rs as RSModel
+from model.daily import DailyScreening
+from mongodb import init_db
 
 collector = BinanceKlinesCollector()
 
@@ -101,38 +104,137 @@ def create_rs_dataframe(all_pairs=None, interval='4h', moving_periods=1):
 
     return result_df
 
-def get_top_rs_pairs(result_df=None,n=10, interval='4h', moving_periods=1):
-    """
-    獲取RS值最大的前n個交易對。
+class RSAnalyzer:
+    def __init__(self, all_pairs=None, interval='1d', moving_periods=1):
+        self.all_pairs = all_pairs if all_pairs is not None else binance_contract_pairs()
+        self.interval = interval
+        self.moving_periods = moving_periods
+        self.result_df = None
+        self.collector = BinanceKlinesCollector()
 
-    參數:
-    n: int, 要返回的交易對數量，默認為10
-    interval: str, K線間隔，默認為'4h'
-    moving_periods: int, RS計算的移動週期，默認為1
+    def create_rs_dataframe(self, moving_periods=None, interval=None):
+        if moving_periods is not None:
+            self.moving_periods = moving_periods
+        if interval is not None:
+            self.interval = interval
+        """
+        為所有合約交易對創建包含RS值的DataFrame。
 
-    返回:
-    pandas.DataFrame: 包含前n個RS值最大的交易對數據
-    """
-    if result_df is None:
-        result_df = create_rs_dataframe(interval, moving_periods)
+        返回:
+        pandas.DataFrame: 包含symbol、moving_periods、interval和data列的DataFrame
+        """
+        rs_data_list = []
 
-    # 按最後一個RS值降序排序
-    result_df['last_rs'] = result_df['data'].apply(lambda data: data[-1]['rs_value'] if data else None)
-    top_n_df = result_df.sort_values('last_rs', ascending=False).head(n)
-    
-    top_n_df = top_n_df.drop('last_rs', axis=1)
-    top_rs_data = []
-    for _, row in top_n_df.iterrows():
-        symbol = row['symbol']
-        last_rs_value = row['data'][-1]['rs_value']
-        top_rs_data.append({"symbol": symbol, "rs_value": round(last_rs_value, 4)})
-    
-    return pd.DataFrame(top_rs_data)
+        import pandas as pd
 
-    return top_n_df
+        for symbol in self.all_pairs:
+            try:
+                df = collector.get_recent_klines([symbol], n_klines=10, interval=self.interval)[symbol]
+                rs_result = rs(df, self.moving_periods, symbol)
+                
+                rs_data = [
+                    {
+                        'timestamp': row['timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
+                        'rs_value': row['rs_value']
+                    }
+                    for _, row in rs_result.iterrows() if not pd.isna(row['rs_value'])
+                ]
+                
+                rs_data_list.append({
+                    'symbol': symbol,
+                    'moving_periods': self.moving_periods,
+                    'interval': self.interval,
+                    'data': rs_data
+                })
+            except Exception as e:
+                print(f"無法獲取或處理 {symbol} 的數據：{str(e)}")
 
-from model.rs import rs as RSModel
-from mongodb import init_db
+        self.result_df = pd.DataFrame(rs_data_list)
+        return self.result_df
+
+    def get_top_rs_pairs(self, n=10):
+        """
+        獲取RS值最大的前n個交易對。
+
+        參數:
+        n: int, 要返回的交易對數量，默認為10
+
+        返回:
+        pandas.DataFrame: 包含前n個RS值最大的交易對數據
+        """
+        if self.result_df is None:
+            self.create_rs_dataframe()
+
+        self.result_df['last_rs'] = self.result_df['data'].apply(lambda data: data[-1]['rs_value'] if data else None)
+        top_n_df = self.result_df.sort_values('last_rs', ascending=False).head(n)
+        
+        top_n_df = top_n_df.drop('last_rs', axis=1)
+        top_rs_data = []
+        for _, row in top_n_df.iterrows():
+            symbol = row['symbol']
+            last_rs_value = row['data'][-1]['rs_value']
+            top_rs_data.append({"symbol": symbol, "rs_value": round(last_rs_value, 4)})
+        
+        return pd.DataFrame(top_rs_data)
+
+    def save_top_rs_pairs_to_db(self, n=10):
+        """
+        保存每日篩選出的前N個RS值最高的交易對到數據庫。
+
+        參數:
+        n: int, 要保存的交易對數量，默認為10
+        """
+        from model.daily import DailyScreening
+        from datetime import datetime
+
+        top_rs_pairs = self.get_top_rs_pairs(n)
+
+        daily_screening = DailyScreening(
+            date=datetime.date.today(),
+            symbols=top_rs_pairs['symbol'].tolist(),
+            rs_values=top_rs_pairs['rs_value'].tolist()
+        )
+
+        daily_screening.save()
+
+        print(f"已保存{n}個RS值最高的交易對到每日篩選結果中")
+
+    def save_rs_to_db(self):
+        """
+        將RS數據保存到MongoDB數據庫。
+        """
+        if self.result_df is None:
+            self.create_rs_dataframe()
+
+        for _, row in self.result_df.iterrows():
+            rs_instance = RSModel.objects(symbol=row['symbol'], moving_periods=row['moving_periods'], interval=row['interval']).first()
+            
+            if rs_instance:
+                rs_instance.update(set__data=[
+                    {
+                        'timestamp': pd.to_datetime(item['timestamp']),
+                        'rs_value': item['rs_value']
+                    }
+                    for item in row['data']
+                ])
+                print(f"更新 {row['symbol']} 的RS數據")
+            else:
+                rs_instance = RSModel(
+                    symbol=row['symbol'],
+                    moving_periods=int(row['moving_periods']),
+                    interval=row['interval'],
+                    data=[
+                        {
+                            'timestamp': pd.to_datetime(item['timestamp']),
+                            'rs_value': item['rs_value']
+                        }
+                        for item in row['data']
+                    ]
+                )
+                rs_instance.save()
+                print(f"儲存 {row['symbol']} 的RS數據")
+
+        print("RS數據已成功保存到數據庫")
 
 def save_rs_to_db(result_df):
     """
@@ -176,26 +278,9 @@ def save_rs_to_db(result_df):
 
     print("RS數據已成功保存到數據庫")
 
-# 在get_top_rs_pairs函數的末尾添加以下代碼
 
-#1.目前待修改：shfit後2的nan2.沒有全寫入
+
 # 使用示例
 if __name__ == "__main__":
-    rs_df=create_rs_dataframe()
-    top_rs_pairs=get_top_rs_pairs(rs_df)
-
-    # # 選擇一個symbol來查看其DataFrame
-    # sample_symbol = rs_df['symbol'].iloc[0]
-    # sample_df = rs_df[rs_df['symbol'] == sample_symbol]
-    
-    # print(f"查看 {sample_symbol} 的DataFrame：")
-    # print(sample_df)
-    
-    # # 顯示該symbol的數據詳情
-    # print(f"\n{sample_symbol} 的數據詳情：")
-    # print(sample_df['data'].iloc[0])
-    
-    # # 將數據寫入數據庫
-    save_rs_to_db(rs_df)
-    print("數據已成功寫入數據庫")
-
+    rs_analyzer = RSAnalyzer(interval='4h', moving_periods=1)
+    rs_analyzer.save_top_rs_pairs_to_db()

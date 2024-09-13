@@ -19,6 +19,7 @@ def get_kline():
         if not all([symbol, interval]):
             return jsonify({"error": "缺少必要的參數 symbol 或 interval"}), 400
 
+
         # 解析 start_time 和 end_time
 
 
@@ -30,10 +31,14 @@ def get_kline():
             return jsonify({"error": "未找到符合條件的數據"}), 404
 
         kline_data = df.reset_index().to_dict(orient='records')
-        return jsonify({"data": kline_data}), 200
+        return render_template('kline_data.html', data=kline_data)
 
     except Exception as e:
         return jsonify({"error": f"獲取K線數據時發生錯誤: {str(e)}"}), 500
+
+
+
+
 
 @kline_blueprint.route('/', methods=['GET', 'POST'])
 def index():

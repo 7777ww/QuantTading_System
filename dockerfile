@@ -1,9 +1,17 @@
 FROM python:3.9.7
-WORKDIR /quant
-COPY  . /quant
+WORKDIR /QunatTraing_System
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 5000
 
-# CMD  ["python", "main.py"]
-CMD ["tail", "-f", "/dev/null"]
+ENV PYTHONPATH=/QunatTraing_System:$PYTHONPATH
+
+EXPOSE 5000
+ENV FLASK_APP=quant.main.py
+ENV FLASK_ENV=development
+ENV FLASK_DEBUG=1
+
+COPY  . /QunatTraing_System
+
+
+CMD ["flask", "run", "--host", "0.0.0.0"]

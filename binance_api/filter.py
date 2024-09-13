@@ -16,7 +16,8 @@ class SymbolFilter:
         self.interval = interval
    
 
-    def filter_symbols(self, top_n=20, moving_avg_period=5):
+    def filter_symbols(self, top_n=20, moving_avg_period=5,strategy_name="rs_ranking"):
+        self.strategy_name=strategy_name
         # 1. 獲取RS值最高的前N個交易對
         top_rs_pairs = self.rs_analyzer.get_top_rs_pairs(n=top_n)
         # 獲取top_rs_pairs的最近K線數據
@@ -45,13 +46,14 @@ class SymbolFilter:
                     # 將交易對添加到篩選結果中
                     filtered_results.append({
                         'symbol': symbol,
+                        'strategy_name': strategy_name,
                         'volume': latest_volume,
                         'moving_avg_volume': latest_moving_avg_volume,
                         'rs_value': top_rs_pairs.loc[top_rs_pairs['symbol'] == symbol, 'rs_value'].values[0]
                     })
 
         # 將篩選結果轉換為DataFrame
-        self.filtered_results = pd.DataFrame(filtered_results)
+        self.filtered_results = filtered_results
         return self.save_db()
 
     def save_db(self):
@@ -64,7 +66,8 @@ class SymbolFilter:
                     symbols=self.filtered_results['symbol'].tolist(),
                     volumes=self.filtered_results['volume'].tolist(),
                     moving_avg_volumes=self.filtered_results['moving_avg_volume'].tolist(),
-                    rs_values=self.filtered_results['rs_value'].tolist()
+                    rs_values=self.filtered_results['rs_value'].tolist(),
+                    strategy_name=self.strategy_name
                 )
                 # 檢查數據庫中是否已存在今日的篩選結果
 
@@ -79,7 +82,8 @@ class SymbolFilter:
                         set__symbols=self.filtered_results['symbol'].tolist(),
                         set__volumes=self.filtered_results['volume'].tolist(),
                         set__moving_avg_volumes=self.filtered_results['moving_avg_volume'].tolist(),
-                        set__rs_values=self.filtered_results['rs_value'].tolist()
+                        set__rs_values=self.filtered_results['rs_value'].tolist(),
+                        set__strategy_name=self.strategy_name
                     )
                     print("已更新今日的篩選結果")
         else:
