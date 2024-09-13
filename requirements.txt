@@ -3,5 +3,6 @@ flask
 flask-smorest
 pymongo==4.8.0
 mongoengine
-ccxt
+
 pandas
+python-dotenv
