@@ -7,6 +7,9 @@
 3. 根據成交量和移動平均線進行篩選
 4. 將篩選結果保存到數據庫
 5. 通過Web界面展示篩選結果
+系統架構：
+![系統架構](/Users/caibinghong/quant_trading_system_diagram/quant_system_stracture.png)
+
 
 系統使用Flask框架構建，提供RESTful API接口。它允許客戶端通過HTTP請求與服務器進行交互，實現數據的獲取、處理和展示。這種架構使得系統具有良好的可擴展性和靈活性，能夠方便地集成到其他應用中或者被其他服務調用。
 
