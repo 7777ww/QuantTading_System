@@ -3,10 +3,11 @@ from mongodb.get_data import get_ohlcv_data_as_df
 from flask import render_template
 
 
-kline_blueprint = Blueprint('kline', __name__, template_folder='templates')
+kline_blueprint = Blueprint('kline', __name__)
 
 @kline_blueprint.route('/get_kline', methods=['GET'])
 def get_kline():
+  
     try:
         from dateutil.parser import parse
         from datetime import datetime, timedelta
@@ -38,8 +39,6 @@ def get_kline():
 
 
 
-
-
 @kline_blueprint.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -49,3 +48,4 @@ def index():
         end_time = request.form.get('end_time')
         return redirect(url_for('kline.get_kline', symbol=symbol, interval=interval, start_time=start_time, end_time=end_time))
     return render_template('get_kline.html')
+

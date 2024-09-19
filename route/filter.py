@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, render_template
 from model.daily import DailyScreening
 from datetime import datetime
+from service import SymbolService
 
 filter_blueprint = Blueprint('filter', __name__)
 
@@ -9,27 +10,22 @@ filter_blueprint = Blueprint('filter', __name__)
 @filter_blueprint.route('/get_daily_screening/<strategy_name>', methods=['GET'])
 def get_daily_screening(strategy_name):
     try:
-        # 獲取今天的日期
-        today = datetime.now().date()
-        
-        # 從數據庫中檢索今天的篩選結果
-        daily_screening = DailyScreening.objects(date=today, strategy_name=strategy_name).first()
-        # 如果找不到指定的策略名稱，返回錯誤信息
+        # 檢查是否有傳入策略名稱
         if not strategy_name:
             return jsonify({"error": "未提供策略名稱"}), 400
 
- 
+        # 根據策略名稱獲取今天的篩選結果
+        daily_screening = SymbolService.get_daily_screening(strategy_name)
+
         if daily_screening:
-            # 如果找到了今天的篩選結果，將其轉換為字典格式
-            result = {
-                "date": daily_screening.date.isoformat(),
-                "symbols": daily_screening.symbols,
-                "rs_values": daily_screening.rs_values,
-                "volumes": daily_screening.volumes,
-                "moving_avg_volumes": daily_screening.moving_avg_volumes
-            }
-            # 將結果轉換為列表格式，以便在模板中使用
+            # 如果找到了今天的篩選結果，將其轉換為列表格式
             result_list = []
+
+            # 如果篩選結果為空，直接返回空結果
+            if daily_screening.is_empty:
+                return render_template('filter.html', result=[]), 200
+
+            # 如果有篩選結果，構建結果列表
             for i in range(len(daily_screening.symbols)):
                 result_list.append({
                     "symbol": daily_screening.symbols[i],
@@ -37,33 +33,25 @@ def get_daily_screening(strategy_name):
                     "volume": daily_screening.volumes[i],
                     "moving_avg_volume": daily_screening.moving_avg_volumes[i]
                 })
+
+            # 返回結果渲染到模板
             return render_template('filter.html', result=result_list), 200
-        elif not daily_screening:
-            
-            return jsonify({"error": f"can't find strategy: {strategy_name}"}), 404
+
         else:
-            # 如果沒有找到今天的篩選結果
-            # 如果沒有找到今天的篩選結果，調用 filter_symbols 方法
-            from binance_api.filter import SymbolFilter
-            # 創建等待頁面
-            task_id = str(uuid.uuid4())  # 生成唯一的任務ID
-            return render_template('watting.html', task_id=task_id), 202
-            filter = SymbolFilter(interval='1d', moving_periods=1)
-            filtered_results = filter.filter_symbols(top_n=20, moving_avg_period=5)
+            # 如果沒有找到今天的篩選結果，調用篩選邏輯
+            result_list = SymbolService.run_symbol_filter(top_n=20, moving_avg_period=5)
             
-            if not filtered_results.empty:
-                result_list = []
-                for _, row in filtered_results.iterrows():
-                    result_list.append({
-                        "symbol": row['symbol'],
-                        "rs_value": row['rs_value'],
-                        "volume": row['volume'],
-                        "moving_avg_volume": row['moving_avg_volume']
-                    })
+            if result_list:
+                # 如果有篩選結果，保存並渲染結果
+                SymbolService.save_to_db(result_list, strategy_name)
                 return render_template('filter.html', result=result_list), 200
             else:
+                # 如果沒有符合條件的篩選結果，顯示空結果
                 print("今天沒有符合條件的篩選結果")
-            return render_template('filter.html', result=None), 200
+                SymbolService.save_to_db([], strategy_name)
+                return render_template('filter.html', result=[]), 200
+
     except Exception as e:
-        # 如果發生錯誤
+        # 捕捉例外，返回500錯誤
+        print(f"獲取每日篩選結果時發生錯誤: {str(e)}")
         return jsonify({"error": f"獲取每日篩選結果時發生錯誤: {str(e)}"}), 500
