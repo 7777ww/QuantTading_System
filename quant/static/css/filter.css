@@ -1,0 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    border: 1px solid #ddd; /* 邊框顏色 */
+    padding: 12px;
+    text-align: left;
+    color: #333; /* 字體顏色 */
+}
+
+th {
+    background-color: #000000; /* 表頭背景黑色 */
+    color: white; /* 表頭文字白色 */
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9; /* 偶數行背景顏色 */
+}
+
+tr:hover {
+    background-color: #f1f1f1; /* 滑過行的背景顏色 */
+}
