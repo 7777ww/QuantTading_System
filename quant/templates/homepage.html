@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+{% include 'header.html' %}
+
+
+<body>
+
+<header>
+    <h1>量化交易系統</h1>
+</header>
+
+<main>
+    <h3>可用端點列表</h3>
+    <ul>
+        <li><a href="/rs/top">計算相對強度（RS）並保存到數據庫 (GET)</a></li>
+        <li><a href="/rs/get_top_rs">獲取前N強相對強度（RS）交易對 (GET)</a></li>
+        <li><a href="/kline">獲取K線數據 (GET)</a></li>
+        <li><a href="/filter/get_daily_screening/rs_ranking">獲取每日篩選結果 (GET)</a></li>
+    </ul>
+</main>
+{% include 'footer.html' %}
+
+
+</body>
+</html>
