@@ -10,6 +10,8 @@
 
 ## 使用 MVC 架構
 此系統採用了 MVC（Model-View-Controller）架構：
+![系統架構圖](doc/quant_system_stracture.png)
+
 
 ### Model
 使用 **MongoEngine** 定義資料模型，負責數據邏輯與數據庫交互部分。
