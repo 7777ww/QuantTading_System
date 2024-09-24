@@ -27,7 +27,8 @@
 
 ## 系統架構
 系統架構如下所示：
-<img src="./doc/quant_system_stracture.png" alt="系統架構圖" style="width:50%;">
+
+<img src="./doc/quant_system_stracture.png" alt="系統架構圖" style="width:40%;">
 
 
 系統使用 Flask 框架構建，並提供 RESTful API 接口，允許客戶端通過 HTTP 請求與服務器進行交互，實現數據的獲取、處理和展示。該架構具有良好的擴展性與靈活性，便於集成到其他應用中，或供其他服務調用。
